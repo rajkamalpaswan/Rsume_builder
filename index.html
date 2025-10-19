@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Institute Resume Builder</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- html2pdf (uses html2canvas + jsPDF inside) -->
+  <script src="https://unpkg.com/html2pdf.js@0.9.3/dist/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="branding">
+      <img id="brand-logo" src="logo.png" alt="Brand Logo (replace logo.png)" />
+      <div>
+        <h1 id="brand-name">Your Institute Name</h1>
+        <p id="brand-tag">Upskilling • Placement Ready • Career Support</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="form-card">
+      <h2>Resume Form — Fill & Download</h2>
+      <p class="muted">Students will only fill fields below. Click <strong>Generate PDF</strong> to download final resume.</p>
+
+      <form id="resume-form">
+        <!-- Personal -->
+        <div class="form-row">
+          <label>Full Name</label>
+          <input name="name" required>
+        </div>
+
+        <div class="form-row two">
+          <div>
+            <label>Email</label>
+            <input name="email" type="email" required>
+          </div>
+          <div>
+            <label>Phone</label>
+            <input name="phone" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Location (City, State)</label>
+          <input name="location">
+        </div>
+
+        <div class="form-row">
+          <label>LinkedIn (profile URL)</label>
+          <input name="linkedin" placeholder="https://www.linkedin.com/in/username">
+        </div>
+
+        <!-- Summary -->
+        <div class="form-row">
+          <label>Professional Summary (2–3 lines)</label>
+          <textarea name="summary" rows="3"></textarea>
+        </div>
+
+        <!-- Education -->
+        <div class="section-title">Education</div>
+        <div class="form-row">
+          <label>Degree & Specialization</label>
+          <input name="degree" placeholder="e.g., B.Sc Computer Science">
+        </div>
+        <div class="form-row two">
+          <div>
+            <label>College / University</label>
+            <input name="college">
+          </div>
+          <div>
+            <label>Year (start - end)</label>
+            <input name="edu_year" placeholder="e.g., 2020 - 2024">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>CGPA / Percentage</label>
+          <input name="grade">
+        </div>
+
+        <!-- Experience (single block — can be duplicated later) -->
+        <div class="section-title">Experience (Optional)</div>
+        <div class="form-row">
+          <label>Job Title</label>
+          <input name="job_title">
+        </div>
+        <div class="form-row">
+          <label>Company</label>
+          <input name="company">
+        </div>
+        <div class="form-row two">
+          <div>
+            <label>Start - End</label>
+            <input name="job_period" placeholder="e.g., Jun 2023 - Dec 2023">
+          </div>
+          <div>
+            <label>Location</label>
+            <input name="job_location">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Responsibilities / Achievements (one per line)</label>
+          <textarea name="job_bullets" rows="4" placeholder="Use new lines for multiple bullets"></textarea>
+        </div>
+
+        <!-- Projects -->
+        <div class="section-title">Projects</div>
+        <div class="form-row">
+          <label>Project Name</label>
+          <input name="project_name">
+        </div>
+        <div class="form-row">
+          <label>Tech / Tools</label>
+          <input name="project_tools" placeholder="e.g., Python, Flask, React">
+        </div>
+        <div class="form-row">
+          <label>Short Description (one per line)</label>
+          <textarea name="project_desc" rows="3"></textarea>
+        </div>
+
+        <!-- Skills & Extras -->
+        <div class="section-title">Skills & Extras</div>
+        <div class="form-row">
+          <label>Technical Skills (comma separated)</label>
+          <input name="tech_skills">
+        </div>
+        <div class="form-row">
+          <label>Soft Skills (comma separated)</label>
+          <input name="soft_skills">
+        </div>
+        <div class="form-row">
+          <label>Certifications / Achievements (one per line)</label>
+          <textarea name="certs" rows="3"></textarea>
+        </div>
+
+        <!-- Optional: hidden input for server endpoint -->
+        <input type="hidden" name="sendEndpoint" id="sendEndpoint" value="">
+
+        <div class="actions">
+          <button id="generateBtn" type="button">Generate PDF</button>
+          <button id="submitBtn" type="button">Generate & Send Copy (optional)</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Hidden resume preview used for PDF generation -->
+    <aside id="pdf-template" class="pdf-template" aria-hidden="true">
+      <div class="pdf-card">
+        <header class="pdf-header">
+          <div class="left">
+            <h1 id="pdf-name">FULL NAME</h1>
+            <p id="pdf-contact">email | phone | location</p>
+            <p id="pdf-links">LinkedIn</p>
+          </div>
+        </header>
+
+        <div class="pdf-two">
+          <div class="pdf-left">
+            <section>
+              <h3>Experience</h3>
+              <p class="muted" id="pdf-jobtitle">Job Title — <span id="pdf-company">Company</span></p>
+              <p id="pdf-jobperiod" class="muted-small"></p>
+              <ul id="pdf-jobbullets"></ul>
+            </section>
+
+            <section>
+              <h3>Projects</h3>
+              <p><strong id="pdf-projectname"></strong> — <span id="pdf-projecttools"></span></p>
+              <ul id="pdf-projectdesc"></ul>
+            </section>
+          </div>
+
+          <div class="pdf-right">
+            <section>
+              <h3>Education</h3>
+              <p id="pdf-degree"></p>
+              <p id="pdf-college" class="muted-small"></p>
+              <p id="pdf-grade" class="muted-small"></p>
+            </section>
+
+            <section>
+              <h3>Skills</h3>
+              <p id="pdf-tech"></p>
+              <p id="pdf-soft"></p>
+            </section>
+
+            <section>
+              <h3>Certifications</h3>
+              <ul id="pdf-certs"></ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer class="site-footer">
+    <small>© <span id="footer-brand">Your Institute Name</span> — Resume Builder</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
